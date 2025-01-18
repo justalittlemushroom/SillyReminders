@@ -91,17 +91,17 @@ const App = () => {
     <View style={[styles.container, theme.container]}>
       {/* Sidebar */}
       <Animated.View
-        style={[
-          styles.sidebar,
-          { transform: [{ translateX: sidebarAnimation }] },
-        ]}
-      >
+      style={[
+        styles.sidebar,
+        { backgroundColor: isNightMode ? darkTheme.container.backgroundColor : lightTheme.container.backgroundColor },
+        { transform: [{ translateX: sidebarAnimation }] },
+      ]}>
         <TouchableOpacity onPress={toggleSidebar} style={styles.closeButton}>
           <Text style={[styles.closeButtonText, theme.text]}>✖</Text>
-        </TouchableOpacity>
-        <Text style={[styles.sidebarText, theme.text]}>Folders</Text>
-        <Text style={[styles.sidebarText, theme.text]}>Tags</Text>
-      </Animated.View>
+          </TouchableOpacity>
+          <Text style={[styles.sidebarText, theme.text]}>Folders</Text>
+          <Text style={[styles.sidebarText, theme.text]}>Tags</Text>
+          </Animated.View>
 
       {/* Main Content */}
       <View style={styles.headerContainer}>
@@ -148,7 +148,7 @@ const App = () => {
             {isImportant ? '⭐ Marked as Important' : '☆ Mark as Important'}
           </Text>
         </TouchableOpacity>
-        <Button title="Add Reminder" onPress={handleAddReminder} />
+        <Button title="Add Reminder" onPress={handleAddReminder} color={isNightMode ? '#565370' : '#99afb0'} font-family={'Cambria'}/>
       </View>
 
 {/* Calendar Modal */}
@@ -171,12 +171,14 @@ const App = () => {
         data={reminders}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <ReminderItem reminder={item} onDelete={(id) =>
-            setReminders(reminders.filter((reminder) => reminder.id !== id))
-          }/>
+          <ReminderItem
+          reminder={item}
+          isNightMode={isNightMode}
+          onDelete={(id) =>
+        setReminders(reminders.filter((reminder) => reminder.id !== id))
+      } />
         )}
-        contentContainerStyle={styles.list}
-      />
+        contentContainerStyle={styles.list} />
     </View>
   );
 };
