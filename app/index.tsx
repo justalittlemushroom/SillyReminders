@@ -52,7 +52,7 @@ const App = () => {
   const onDayPress = (day: any) => {
     const selectedDate = new Date(day.dateString);
     setDueDate(selectedDate);
-    setShowCalendar(false);
+    setShowCalendar(false); // Hide calendar after selecting a date
   };
 
   const toggleSidebar = () => {
@@ -97,6 +97,9 @@ const App = () => {
           { transform: [{ translateX: sidebarAnimation }] },
         ]}
       >
+        <TouchableOpacity onPress={toggleSidebar} style={styles.closeButton}>
+          <Text style={[styles.closeButtonText, theme.text]}>✖</Text>
+        </TouchableOpacity>
         <Text style={[styles.sidebarText, theme.text]}>Folders</Text>
         <Text style={[styles.sidebarText, theme.text]}>Tags</Text>
       </Animated.View>
@@ -182,6 +185,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginBottom: 15,
   },
+  closeButton: {
+    alignSelf: 'flex-end',
+  },
+  closeButtonText: {
+    fontSize: 24,
+    color: '#fff',
+  },
   menuButton: {
     marginRight: 15,
   },
@@ -230,6 +240,12 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: 20,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
 });
 
