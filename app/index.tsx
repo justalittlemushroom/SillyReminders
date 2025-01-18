@@ -1,5 +1,17 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, FlatList, Text, StyleSheet, Alert, Modal, TouchableOpacity } from 'react-native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  Button,
+  FlatList,
+  StyleSheet,
+  Alert,
+  Modal,
+  TouchableOpacity,
+  Switch,
+  Animated,
+} from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import ReminderItem from './reminder_item';
 import { Reminder } from './reminder_data';
@@ -11,6 +23,10 @@ const App = () => {
   const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const [showCalendar, setShowCalendar] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
+  const [isNightMode, setIsNightMode] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+
+  const sidebarAnimation = useRef(new Animated.Value(-250)).current; // Sidebar starts hidden off-screen
 
   const handleAddReminder = () => {
     if (!title || !description || !dueDate) {
@@ -36,68 +52,111 @@ const App = () => {
   const onDayPress = (day: any) => {
     const selectedDate = new Date(day.dateString);
     setDueDate(selectedDate);
-    setShowCalendar(false);  // Close the calendar after selection
+    setShowCalendar(false);
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Reminders</Text>
+  const toggleSidebar = () => {
+    if (sidebarVisible) {
+      // Slide sidebar out
+      Animated.timing(sidebarAnimation, {
+        toValue: -250,
+        duration: 300,
+        useNativeDriver: false,
+      }).start(() => setSidebarVisible(false));
+    } else {
+      // Slide sidebar in
+      setSidebarVisible(true);
+      Animated.timing(sidebarAnimation, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    }
+  };
 
-      {/* Reminder Input Form */}
+  const lightTheme = {
+    container: { backgroundColor: '#f9f9f9' },
+    text: { color: '#000' },
+    input: { backgroundColor: '#fff', borderColor: '#ccc', color: '#000' },
+  };
+
+  const darkTheme = {
+    container: { backgroundColor: '#1e1e1e' },
+    text: { color: '#fff' },
+    input: { backgroundColor: '#333', borderColor: '#555', color: '#fff' },
+  };
+
+  const theme = isNightMode ? darkTheme : lightTheme;
+
+  return (
+    <View style={[styles.container, theme.container]}>
+      {/* Sidebar */}
+      <Animated.View
+        style={[
+          styles.sidebar,
+          { transform: [{ translateX: sidebarAnimation }] },
+        ]}
+      >
+        <Text style={[styles.sidebarText, theme.text]}>Folders</Text>
+        <Text style={[styles.sidebarText, theme.text]}>Tags</Text>
+      </Animated.View>
+
+      {/* Main Content */}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity onPress={toggleSidebar} style={styles.menuButton}>
+          <Text style={[styles.menuButtonText, theme.text]}>☰</Text>
+        </TouchableOpacity>
+        <Text style={[styles.header, theme.text]}>Reminders</Text>
+        <View style={styles.toggleContainer}>
+          <Text style={[styles.toggleText, theme.text]}>
+            {isNightMode ? 'Night Mode' : 'Day Mode'}
+          </Text>
+          <Switch
+            value={isNightMode}
+            onValueChange={(value) => setIsNightMode(value)}
+          />
+        </View>
+      </View>
+
       <View style={styles.inputContainer}>
         <TextInput
           placeholder="Title"
           value={title}
           onChangeText={setTitle}
-          style={styles.input}
+          style={[styles.input, theme.input]}
+          placeholderTextColor={theme.text.color}
         />
         <TextInput
           placeholder="Description"
           value={description}
           onChangeText={setDescription}
-          style={styles.input}
+          style={[styles.input, theme.input]}
+          placeholderTextColor={theme.text.color}
         />
-        {/* Due Date */}
-        <TouchableOpacity style={styles.datePickerButton} onPress={() => setShowCalendar(true)}>
-          <Text style={styles.datePickerText}>
+        <TouchableOpacity
+          style={[styles.datePickerButton, theme.input]}
+          onPress={() => setShowCalendar(true)}
+        >
+          <Text style={[styles.datePickerText, theme.text]}>
             {dueDate ? dueDate.toLocaleDateString() : 'Select Due Date'}
           </Text>
         </TouchableOpacity>
-
-        {/* Important Star */}
         <TouchableOpacity onPress={() => setIsImportant(!isImportant)}>
-          <Text style={styles.importantText}>
-            {isImportant ? '⭐ Important' : '☆ Mark as Important'}
+          <Text style={[styles.importantText, theme.text]}>
+            {isImportant ? '⭐ Marked as Important' : '☆ Mark as Important'}
           </Text>
         </TouchableOpacity>
-
         <Button title="Add Reminder" onPress={handleAddReminder} />
       </View>
 
-      {/* Modal for the Calendar Picker */}
-      <Modal visible={showCalendar} animationType="slide" transparent={true}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.calendarContainer}>
-            <Calendar
-              onDayPress={onDayPress}
-              markedDates={{
-                [dueDate?.toISOString().split('T')[0] || '']: { selected: true, selectedColor: 'blue' },
-              }}
-              theme={{
-                selectedDayBackgroundColor: '#00adf5',
-                todayTextColor: '#00adf5',
-              }}
-            />
-            <Button title="Close Calendar" onPress={() => setShowCalendar(false)} />
-          </View>
-        </View>
-      </Modal>
-
-      {/* List of Reminders */}
       <FlatList
         data={reminders}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <ReminderItem reminder={item} />}
+        renderItem={({ item }) => (
+          <ReminderItem reminder={item} onDelete={(id) =>
+            setReminders(reminders.filter((reminder) => reminder.id !== id))
+          }/>
+        )}
         contentContainerStyle={styles.list}
       />
     </View>
@@ -108,58 +167,69 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#f9f9f9',
+  },
+  sidebar: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    width: 250,
+    backgroundColor: '#333',
+    padding: 20,
+    zIndex: 1,
+  },
+  sidebarText: {
+    fontSize: 18,
+    marginBottom: 15,
+  },
+  menuButton: {
+    marginRight: 15,
+  },
+  menuButtonText: {
+    fontSize: 24,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 20,
   },
   header: {
     fontSize: 28,
     fontWeight: 'bold',
-    marginBottom: 20,
-    textAlign: 'center',
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleText: {
+    marginRight: 10,
   },
   inputContainer: {
     marginBottom: 20,
   },
   input: {
     height: 40,
-    borderColor: '#ccc',
     borderWidth: 1,
     marginBottom: 10,
     paddingHorizontal: 10,
     borderRadius: 5,
-    backgroundColor: '#fff',
   },
   datePickerButton: {
     height: 40,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 10,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
-    backgroundColor: '#fff',
+    marginBottom: 10,
   },
   datePickerText: {
-    color: '#666',
+    fontSize: 16,
   },
   importantText: {
     marginBottom: 10,
-    color: '#f39c12',
   },
   list: {
     paddingBottom: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  calendarContainer: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 10,
-    width: 300,
-    alignItems: 'center',
   },
 });
 
