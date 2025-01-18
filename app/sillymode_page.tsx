@@ -114,9 +114,13 @@ const SillyModePage = () => {
 
       {/* List of Reminders */}
       <FlatList
-        data={isSillyMode ? shuffleReminders(reminders) : reminders} 
+        data={reminders}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <ReminderItem reminder={item} />}
+        renderItem={({ item }) => (
+          <ReminderItem reminder={item} onDelete={(id) =>
+            setReminders(reminders.filter((reminder) => reminder.id !== id))
+          }/>
+        )}
         contentContainerStyle={styles.list}
       />
 
@@ -172,7 +176,7 @@ const styles = StyleSheet.create({
   },
   sillyModeButton: {
     position: 'absolute',
-    top: 20,
+    bottom: 20,
     right: 20,
     width: 50,
     height: 50,
