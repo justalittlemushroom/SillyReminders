@@ -135,9 +135,7 @@ const SillyModePage = () => {
         data={reminders}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <ReminderItem reminder={item} onDelete={(id) =>
-            setReminders(reminders.filter((reminder) => reminder.id !== id))
-          }/>
+          <ReminderItem reminder={item} onDelete={(id) => setReminders(reminders.filter((reminder) => reminder.id !== id))} isNightMode={false}/>
         )}
         contentContainerStyle={styles.list}
       />
