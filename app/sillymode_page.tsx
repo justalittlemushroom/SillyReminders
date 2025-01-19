@@ -16,14 +16,14 @@ const SillyModePage = () => {
   const [isSillyMode, setIsSillyMode] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
-  const router = useRouter(); // 
+  const router = useRouter(); 
 
   const playSound = async () => {
     const { sound } = await Audio.Sound.createAsync(
-      require('./sillyMeow.mp3') // Path to your sound file
+      require('./sillyMeow.mp3') 
     );
     setSound(sound);
-    await sound.playAsync(); // Play the sound
+    await sound.playAsync(); // Plays meow
   };
 
   const handleAddReminder = () => {
@@ -46,7 +46,7 @@ const SillyModePage = () => {
     setDueDate(undefined);
     setIsImportant(false);
 
-    playSound(); // Play the sound when a reminder is added
+    playSound(); 
   };
 
   const onDayPress = (day: any) => {
@@ -58,21 +58,21 @@ const SillyModePage = () => {
 
   const playSillyModeSound = async () => {
     const { sound } = await Audio.Sound.createAsync(
-      require('./sillyMeow.mp3') // Replace with your sound file
+      require('./sillyMeow.mp3') 
     );
     setSound(sound);
     await sound.playAsync();
   };
 
   const goToHomeScreen = () => {
-    playSillyModeSound(); // Play sound when going to HomeScreen
-    router.push('/'); // Navigate back to the home screen
+    playSillyModeSound(); 
+    router.push('/'); 
   };
 
   useEffect(() => {
     return () => {
       if (sound) {
-        sound.unloadAsync(); // Unload the sound
+        sound.unloadAsync(); 
       }
     };
   }, [sound]);
