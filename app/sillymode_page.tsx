@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, FlatList, Text, StyleSheet, Alert, Modal, TouchableOpacity } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import ReminderItem from './reminder_item';
 import { Reminder } from './reminder_data';
 import { useRouter } from 'expo-router'; 
+import { Audio } from 'expo-av'; // Importing expo-av
 
 const SillyModePage = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
@@ -13,8 +14,17 @@ const SillyModePage = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [isImportant, setIsImportant] = useState(false);
   const [isSillyMode, setIsSillyMode] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   const router = useRouter(); // 
+
+  const playSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require('./sillyMeow.mp3') // Path to your sound file
+    );
+    setSound(sound);
+    await sound.playAsync(); // Play the sound
+  };
 
   const handleAddReminder = () => {
     if (!title || !description || !dueDate) {
@@ -35,33 +45,41 @@ const SillyModePage = () => {
     setDescription('');
     setDueDate(undefined);
     setIsImportant(false);
+
+    playSound(); // Play the sound when a reminder is added
   };
 
   const onDayPress = (day: any) => {
     const selectedDate = new Date(day.dateString);
     setDueDate(selectedDate);
+    playSound();
     setShowCalendar(false);
   };
 
-  // Function to shuffle reminders for silly mode
-  const shuffleReminders = (reminders: Reminder[]) => {
-    const shuffled = [...reminders];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Shuffle elements randomly
-    }
-    return shuffled;
+  const playSillyModeSound = async () => {
+    const { sound } = await Audio.Sound.createAsync(
+      require('./sillyMeow.mp3') // Replace with your sound file
+    );
+    setSound(sound);
+    await sound.playAsync();
   };
 
-  // Navigate back to HomeScreen (index.tsx)
   const goToHomeScreen = () => {
+    playSillyModeSound(); // Play sound when going to HomeScreen
     router.push('/'); // Navigate back to the home screen
   };
+
+  useEffect(() => {
+    return () => {
+      if (sound) {
+        sound.unloadAsync(); // Unload the sound
+      }
+    };
+  }, [sound]);
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>SILLY REMINDERS!!!!!</Text>
-
       {/* Reminder Input Form */}
       <View style={styles.inputContainer}>
         <TextInput
